@@ -76,6 +76,7 @@ elseif (APPLE)
   endfunction ()
 
   # TODO: using homebrew was dumb, instead, prefer to statically link (and ensure correct versioning).
+  # TODO: gah i lost all of the arm64 dylibs while forking the remote repo... sometimes i hate git
   find_package(OpenGL REQUIRED)
   add_extlib (glew libGLEW.a libGLEW.dylib)
   find_package(SDL2 REQUIRED)
