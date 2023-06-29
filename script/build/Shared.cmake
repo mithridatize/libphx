@@ -4,6 +4,10 @@ if (WIN32)
 elseif (UNIX AND NOT APPLE)
   set (PLATFORM "linux")
   set (LINUX TRUE)
+elseif (APPLE)
+  # TODO: this isn't quite right :) just getting support my M1 architecture first.
+  set (PLATFORM "arm")
+  set (APPLE TRUE)
 else ()
   message (FATAL_ERROR "Unsupported Platform")
 endif ()
@@ -66,6 +70,25 @@ function (phx_configure_target_properties target)
     target_compile_options (${target} PRIVATE "-msse4")
 
     # :(
+    target_compile_options (${target} PRIVATE "-std=c++11")
+
+  elseif (APPLE)
+    target_compile_definitions (${target} PRIVATE UNIX=1)
+
+    target_compile_options (${target} PRIVATE "-Wall")            # All error checking
+    target_compile_options (${target} PRIVATE "-fno-exceptions")  # No exception handling
+    target_compile_options (${target} PRIVATE "-ffast-math")      # No strict FP
+    target_compile_options (${target} PRIVATE "-fpic")            # PIC since this is shared
+
+    target_compile_options (${target} PRIVATE "-Wno-unused-variable")
+    target_compile_options (${target} PRIVATE "-Wno-unknown-pragmas")
+
+    # TODO: is there really no clang arm64 optimization flag?....
+
+    # TODO: Experiment with different optimization levels: -O2, -Os, etc.
+    target_compile_options (${target} PRIVATE "-O3")
+
+    # :( - TODO: maybe one day upgrade to 17, or even 20?!
     target_compile_options (${target} PRIVATE "-std=c++11")
 
   endif ()

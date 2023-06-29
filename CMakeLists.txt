@@ -60,8 +60,36 @@ if (WINDOWS)
   endif ()
 
 elseif (LINUX)
-
   # TODO
+
+elseif (APPLE)
+
+  # Register an external shared library
+  function (add_extlib name lib dylib)
+    add_library (${name} SHARED IMPORTED GLOBAL)
+    set_property (TARGET ${name} PROPERTY IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/ext/lib/${PLATARCH}/${dylib}")
+  endfunction ()
+
+  # Link target to an external library
+  function (target_link_extlib target lib)
+    target_link_libraries (${target} ${lib})
+  endfunction ()
+
+  # TODO: using homebrew was dumb, instead, prefer to statically link (and ensure correct versioning).
+  find_package(OpenGL REQUIRED)
+  add_extlib (glew libGLEW.a libGLEW.dylib)
+  find_package(SDL2 REQUIRED)
+  find_package(Lua51 REQUIRED)
+  find_package(Freetype REQUIRED)
+
+  # Since lz4 doesn't have a CMake file, use the checked-in static library *.a and dynamic library *.dylib
+  add_extlib (lz4 liblz4.a liblz4.1.dylib)
+  add_extlib (BulletCollision libBulletCollision.2.87.dylib libBulletCollision.2.87.dylib)
+  add_extlib (BulletDynamics libBulletDynamics.2.87.dylib libBulletDynamics.2.87.dylib)
+
+  # TODO: test audio; not convinced this is right since i couldn't find a static lib for fmod / fmod-studio.
+  add_extlib (fmod libfmod.dylib libfmod.dylib) # release version is libfmodL.dylib
+  add_extlib (fmodstudio libfmodstudio.dylib libfmodstudio.dylib) # release version also has L suffix.
 
 endif ()
 
@@ -97,5 +125,20 @@ elseif (LINUX)
 
   # Add ext/lib/{$PLATARCH} to runtime library search path
   target_link_options (phx PRIVATE "-Wl,-rpath,../ext/lib/${PLATARCH}")
+
+elseif (APPLE)
+
+  target_link_libraries (phx
+    ${OPENGL_LIBRARIES}
+    glew
+    ${SDL2_LIBRARIES}
+    ${LUA51_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    lz4
+    fmod fmodstudio
+    BulletCollision BulletDynamics)
+
+    # Add ext/lib/{$PLATARCH} to runtime library search path
+    target_link_options (phx PRIVATE "-Wl,-rpath,@executable_path/../ext/lib/${PLATARCH}")
 
 endif ()
